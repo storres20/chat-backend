@@ -56,11 +56,7 @@ wss.on('connection', (ws) => {
             ws.send(JSON.stringify({ type: 'history', data: chatHistory }));
 
         } else if (messageData.type === 'chat_message') {
-            // Store chat messages in chat history (excluding system messages)
-            if (messageData.username !== 'System') {
-                chatHistory.push(messageData);
-            }
-            // Broadcast the updated chat history and messages
+            // Directly broadcast the message; it will be saved in chat history within broadcastMessage
             broadcastMessage(messageData);
         }
     });
@@ -84,6 +80,9 @@ wss.on('connection', (ws) => {
     });
 
     const broadcastMessage = (messageData) => {
+        // Store all messages, including system messages, in chat history
+        chatHistory.push(messageData);
+
         wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify({ type: 'message', data: messageData }));
