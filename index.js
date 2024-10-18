@@ -8,7 +8,7 @@ const server = app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
 
-// List to store all connected usernames
+// List to store all connected users and their status
 let connectedUsers = [];
 
 const wss = new WebSocket.Server({ server });
@@ -19,12 +19,17 @@ wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         const messageData = JSON.parse(message);
 
-        // When a new user joins, add them to the connectedUsers list
-        if (messageData.username !== 'System' && !connectedUsers.includes(messageData.username)) {
-            connectedUsers.push(messageData.username);
+        // Handle new user joining the chat
+        if (messageData.username !== 'System') {
+            ws.username = messageData.username; // Attach the username to the WebSocket connection
+
+            // Add user to connectedUsers if not already present
+            if (!connectedUsers.some(user => user.username === ws.username)) {
+                connectedUsers.push({ username: ws.username, status: 'online' });
+            }
         }
 
-        // Broadcast the list of connected users to all clients
+        // Broadcast updated user list to all clients
         broadcastUsers();
 
         // Broadcast the message to all clients
@@ -34,10 +39,12 @@ wss.on('connection', (ws) => {
     ws.on('close', () => {
         console.log('Client disconnected');
 
-        // Remove the disconnected user from the connectedUsers list
-        connectedUsers = connectedUsers.filter((user) => user !== ws.username);
+        // Set the user's status to offline on disconnect
+        connectedUsers = connectedUsers.map((user) =>
+            user.username === ws.username ? { ...user, status: 'offline' } : user
+        );
 
-        // Broadcast the updated user list after someone disconnects
+        // Broadcast the updated user list after disconnection
         broadcastUsers();
     });
 
