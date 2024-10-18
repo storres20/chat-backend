@@ -1,3 +1,22 @@
+const express = require('express');
+const WebSocket = require('ws');
+
+const app = express();
+const port = 3001;
+
+// Start the HTTP server
+const server = app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
+
+// Create a WebSocket server that uses the same HTTP server
+const wss = new WebSocket.Server({ server });
+
+// List to store all connected users and their status
+let connectedUsers = [];
+// Store chat history in memory
+let chatHistory = [];
+
 wss.on('connection', (ws) => {
     console.log('New client connected');
 
