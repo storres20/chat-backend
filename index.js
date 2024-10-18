@@ -10,6 +10,8 @@ const server = app.listen(port, () => {
 
 // List to store all connected users and their status
 let connectedUsers = [];
+// Store chat history in memory
+let chatHistory = [];
 
 const wss = new WebSocket.Server({ server });
 
@@ -26,15 +28,28 @@ wss.on('connection', (ws) => {
             // Add user to connectedUsers if not already present
             if (!connectedUsers.some(user => user.username === ws.username)) {
                 connectedUsers.push({ username: ws.username, status: 'online' });
+                // Broadcast a system message that the user has joined
+                broadcastMessage({ username: 'System', message: `${ws.username} has joined the chat.` });
+            } else {
+                // Mark user as online again if they re-enter the chat
+                connectedUsers = connectedUsers.map(user =>
+                    user.username === ws.username ? { ...user, status: 'online' } : user
+                );
             }
         }
 
-        // Broadcast updated user list to all clients (online users only)
-        broadcastUsers();
+        // Store messages in chat history (excluding system messages)
+        if (messageData.username !== 'System') {
+            chatHistory.push(messageData);
+        }
 
-        // Broadcast the message to all clients
+        // Broadcast the updated user list and chat history to the current user
+        broadcastUsers();
         broadcastMessage(messageData);
     });
+
+    // Send chat history when a user connects
+    ws.send(JSON.stringify({ type: 'history', data: chatHistory }));
 
     ws.on('close', () => {
         console.log('Client disconnected');
@@ -43,6 +58,9 @@ wss.on('connection', (ws) => {
         connectedUsers = connectedUsers.map((user) =>
             user.username === ws.username ? { ...user, status: 'offline' } : user
         );
+
+        // Broadcast the user leaving message
+        broadcastMessage({ username: 'System', message: `${ws.username} has left the chat.` });
 
         // Broadcast the updated user list after disconnection
         broadcastUsers();
@@ -57,7 +75,6 @@ wss.on('connection', (ws) => {
     };
 
     const broadcastUsers = () => {
-        // Broadcast only online users
         const onlineUsers = connectedUsers.filter(user => user.status === 'online');
         wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
