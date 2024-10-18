@@ -1,20 +1,3 @@
-const express = require('express');
-const WebSocket = require('ws');
-
-const app = express();
-const port = 3001;
-
-const server = app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
-
-// List to store all connected users and their status
-let connectedUsers = [];
-// Store chat history in memory
-let chatHistory = [];
-
-const wss = new WebSocket.Server({ server });
-
 wss.on('connection', (ws) => {
     console.log('New client connected');
 
@@ -36,6 +19,8 @@ wss.on('connection', (ws) => {
                     user.username === ws.username ? { ...user, status: 'online' } : user
                 );
             }
+            // Immediately broadcast the updated users after setting the username
+            broadcastUsers();
         }
 
         // Store messages in chat history (excluding system messages)
@@ -43,13 +28,9 @@ wss.on('connection', (ws) => {
             chatHistory.push(messageData);
         }
 
-        // Broadcast the updated user list and chat history to the current user
-        broadcastUsers();
+        // Broadcast the updated chat history and messages
         broadcastMessage(messageData);
     });
-
-    // Send chat history when a user connects
-    ws.send(JSON.stringify({ type: 'history', data: chatHistory }));
 
     ws.on('close', () => {
         console.log('Client disconnected');
