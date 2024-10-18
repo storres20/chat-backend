@@ -54,16 +54,19 @@ wss.on('connection', (ws) => {
     ws.on('close', () => {
         console.log('Client disconnected');
 
-        // Set the user's status to offline on disconnect
-        connectedUsers = connectedUsers.map((user) =>
-            user.username === ws.username ? { ...user, status: 'offline' } : user
-        );
+        // Only broadcast "left the chat" message if the username is defined
+        if (ws.username) {
+            // Set the user's status to offline on disconnect
+            connectedUsers = connectedUsers.map((user) =>
+                user.username === ws.username ? { ...user, status: 'offline' } : user
+            );
 
-        // Broadcast the user leaving message
-        broadcastMessage({ username: 'System', message: `${ws.username} has left the chat.` });
+            // Broadcast the user leaving message
+            broadcastMessage({ username: 'System', message: `${ws.username} has left the chat.` });
 
-        // Broadcast the updated user list after disconnection
-        broadcastUsers();
+            // Broadcast the updated user list after disconnection
+            broadcastUsers();
+        }
     });
 
     const broadcastMessage = (messageData) => {
