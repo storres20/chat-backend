@@ -20,40 +20,40 @@ let chatHistory = [];
 wss.on('connection', (ws) => {
     console.log('New client connected');
 
-    // Send chat history immediately after a new client connects
-    ws.send(JSON.stringify({ type: 'history', data: chatHistory }));
-
     ws.on('message', (message) => {
         const messageData = JSON.parse(message);
 
-        // Handle new user joining the chat
-        if (messageData.username !== 'System') {
+        // Handle setting the username when user joins the chat
+        if (messageData.type === 'set_username' && messageData.username) {
             ws.username = messageData.username; // Attach the username to the WebSocket connection
 
             // Add user to connectedUsers if not already present
             if (!connectedUsers.some(user => user.username === ws.username)) {
                 connectedUsers.push({ username: ws.username, status: 'online' });
-                // Broadcast a system message that the user has joined
-                broadcastMessage({ username: 'System', message: `${ws.username} has joined the chat.` });
-                // Broadcast the updated list of connected users right after setting the username
-                broadcastUsers();
             } else {
                 // Mark user as online again if they re-enter the chat
                 connectedUsers = connectedUsers.map(user =>
                     user.username === ws.username ? { ...user, status: 'online' } : user
                 );
-                // Immediately broadcast the updated users list
-                broadcastUsers();
             }
-        }
 
-        // Store messages in chat history (excluding system messages)
-        if (messageData.username !== 'System') {
-            chatHistory.push(messageData);
-        }
+            // Immediately broadcast the updated users list
+            broadcastUsers();
 
-        // Broadcast the updated chat history and messages
-        broadcastMessage(messageData);
+            // Broadcast a system message that the user has joined or re-entered the chat
+            broadcastMessage({ username: 'System', message: `${ws.username} has joined the chat.` });
+
+            // Send the previous chat history to the user who just joined/re-entered
+            ws.send(JSON.stringify({ type: 'history', data: chatHistory }));
+
+        } else if (messageData.type === 'chat_message') {
+            // Store chat messages in chat history (excluding system messages)
+            if (messageData.username !== 'System') {
+                chatHistory.push(messageData);
+            }
+            // Broadcast the updated chat history and messages
+            broadcastMessage(messageData);
+        }
     });
 
     ws.on('close', () => {
