@@ -29,7 +29,7 @@ wss.on('connection', (ws) => {
             }
         }
 
-        // Broadcast updated user list to all clients
+        // Broadcast updated user list to all clients (online users only)
         broadcastUsers();
 
         // Broadcast the message to all clients
@@ -57,9 +57,11 @@ wss.on('connection', (ws) => {
     };
 
     const broadcastUsers = () => {
+        // Broadcast only online users
+        const onlineUsers = connectedUsers.filter(user => user.status === 'online');
         wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({ type: 'users', data: connectedUsers }));
+                client.send(JSON.stringify({ type: 'users', data: onlineUsers }));
             }
         });
     };
