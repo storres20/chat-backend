@@ -20,6 +20,9 @@ let chatHistory = [];
 wss.on('connection', (ws) => {
     console.log('New client connected');
 
+    // Send chat history immediately after a new client connects
+    ws.send(JSON.stringify({ type: 'history', data: chatHistory }));
+
     ws.on('message', (message) => {
         const messageData = JSON.parse(message);
 
@@ -32,14 +35,16 @@ wss.on('connection', (ws) => {
                 connectedUsers.push({ username: ws.username, status: 'online' });
                 // Broadcast a system message that the user has joined
                 broadcastMessage({ username: 'System', message: `${ws.username} has joined the chat.` });
+                // Broadcast the updated list of connected users right after setting the username
+                broadcastUsers();
             } else {
                 // Mark user as online again if they re-enter the chat
                 connectedUsers = connectedUsers.map(user =>
                     user.username === ws.username ? { ...user, status: 'online' } : user
                 );
+                // Immediately broadcast the updated users list
+                broadcastUsers();
             }
-            // Immediately broadcast the updated users after setting the username
-            broadcastUsers();
         }
 
         // Store messages in chat history (excluding system messages)
