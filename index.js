@@ -50,21 +50,29 @@ wss.on('connection', (ws) => {
             broadcastUsers();
 
             // Broadcast a system message that the user has joined or re-entered the chat
-            broadcastMessage({ username: 'System', message: `${ws.username} has joined the chat.` });
+            const joinMessage = {
+                username: 'System',
+                message: `${ws.username} has joined the chat.`,
+                timestamp: new Date().toISOString()
+            };
+            broadcastMessage(joinMessage);
 
             // Send the previous chat history to the user who just joined/re-entered
             ws.send(JSON.stringify({ type: 'history', data: chatHistory }));
 
         } else if (messageData.type === 'chat_message') {
             // Directly broadcast the message; it will be saved in chat history within broadcastMessage
-            broadcastMessage(messageData);
+            const userMessage = {
+                ...messageData,
+                timestamp: new Date().toISOString()
+            };
+            broadcastMessage(userMessage);
         }
     });
 
     ws.on('close', () => {
         console.log('Client disconnected');
 
-        // Only broadcast "left the chat" message if the username is defined
         if (ws.username) {
             // Set the user's status to offline on disconnect
             connectedUsers = connectedUsers.map((user) =>
@@ -72,17 +80,24 @@ wss.on('connection', (ws) => {
             );
 
             // Broadcast the user leaving message
-            broadcastMessage({ username: 'System', message: `${ws.username} has left the chat.` });
+            const leaveMessage = {
+                username: 'System',
+                message: `${ws.username} has left the chat.`,
+                timestamp: new Date().toISOString()
+            };
+            broadcastMessage(leaveMessage);
 
             // Broadcast the updated user list after disconnection
             broadcastUsers();
         }
     });
 
+    // Broadcast message to all clients and store in chat history with timestamp
     const broadcastMessage = (messageData) => {
-        // Store all messages, including system messages, in chat history
+        // Add the message to the chat history
         chatHistory.push(messageData);
 
+        // Send the message to all connected clients
         wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify({ type: 'message', data: messageData }));
