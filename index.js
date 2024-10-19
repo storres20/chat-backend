@@ -53,8 +53,10 @@ wss.on('connection', (ws) => {
             const joinMessage = {
                 username: 'System',
                 message: `${ws.username} has joined the chat.`,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString() // Add timestamp
             };
+
+            console.log('Broadcasting join message with timestamp:', joinMessage.timestamp); // Log timestamp
             broadcastMessage(joinMessage);
 
             // Send the previous chat history to the user who just joined/re-entered
@@ -64,8 +66,10 @@ wss.on('connection', (ws) => {
             // Directly broadcast the message; it will be saved in chat history within broadcastMessage
             const userMessage = {
                 ...messageData,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString() // Add timestamp
             };
+
+            console.log('Broadcasting user message with timestamp:', userMessage.timestamp); // Log timestamp
             broadcastMessage(userMessage);
         }
     });
@@ -83,8 +87,10 @@ wss.on('connection', (ws) => {
             const leaveMessage = {
                 username: 'System',
                 message: `${ws.username} has left the chat.`,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString() // Add timestamp
             };
+
+            console.log('Broadcasting leave message with timestamp:', leaveMessage.timestamp); // Log timestamp
             broadcastMessage(leaveMessage);
 
             // Broadcast the updated user list after disconnection
