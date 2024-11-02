@@ -1,15 +1,23 @@
 const express = require('express');
 const WebSocket = require('ws');
+const https = require('https');
+const fs = require('fs');
 
 const app = express();
 const port = 3001;
 
-// Start the HTTP server
-const server = app.listen(port, () => {
-    console.log(`Server running on http://chat.website101.xyz:${port}`);
+// Load SSL certificate and private key from Let's Encrypt
+const server = https.createServer({
+    cert: fs.readFileSync('/etc/letsencrypt/live/chat.website101.xyz/fullchain.pem'),
+    key: fs.readFileSync('/etc/letsencrypt/live/chat.website101.xyz/privkey.pem')
+}, app);
+
+// Start the HTTPS server
+server.listen(port, () => {
+    console.log(`Server running on https://chat.website101.xyz:${port}`);
 });
 
-// Create a WebSocket server that uses the same HTTP server
+// Create a WebSocket server that uses the same HTTPS server
 const wss = new WebSocket.Server({ server });
 
 // List to store all connected users and their status
