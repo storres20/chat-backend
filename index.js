@@ -14,7 +14,7 @@ const server = https.createServer({
 
 // Start the HTTPS server
 server.listen(port, () => {
-    console.log(`Server running on https://chat.lonkansoft.pro:${port}`);
+    console.log(`Server running on https://chat.website101.xyz:${port}`);
 });
 
 // Create a WebSocket server that uses the same HTTPS server
