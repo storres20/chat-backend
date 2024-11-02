@@ -8,8 +8,8 @@ const port = 3001;
 
 // Load SSL certificate and private key from Let's Encrypt
 const server = https.createServer({
-    cert: fs.readFileSync('/etc/letsencrypt/live/chat.lonkansoft.pro/fullchain.pem'),
-    key: fs.readFileSync('/etc/letsencrypt/live/chat.lonkansoft.pro/privkey.pem')
+    cert: fs.readFileSync('/etc/letsencrypt/live/chat.website101.xyz/fullchain.pem'),
+    key: fs.readFileSync('/etc/letsencrypt/live/chat.website101.xyz/privkey.pem')
 }, app);
 
 // Start the HTTPS server
