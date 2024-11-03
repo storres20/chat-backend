@@ -1,0 +1,12 @@
+# En la terminal
+nslookup website101.xyz
+nslookup www.website101.xyz
+
+// para verificar si el DNS ya esta apuntando al IP VPS
+
+# En la terminal del VPS
+# ssh root@145.223.120.127
+
+sudo certbot certonly --standalone -d chat.website101.xyz
+
+// para crear SSL del sub dominio
